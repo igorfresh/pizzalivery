@@ -11,7 +11,12 @@ export const FlavourContentWrapper = styled.section`
   min-height: 50vh;
   padding: ${sizes.small} 0;
 `
-export const FlavourCard = styled.div`
+
+type FlavourCard = {
+  selected: boolean
+}
+
+export const FlavourCard = styled.div<FlavourCard>`
   width: 30%;
   display: flex;
   flex-direction: column;
@@ -22,6 +27,7 @@ export const FlavourCard = styled.div`
   border-style: solid;
   border-color: ${colors.secondary.light};
   color: ${colors.text.main};
+
   &:hover {
     border-color: ${colors.text.main};
   }

@@ -1,4 +1,4 @@
-import { createContext, useState } from "react"
+import { createContext, useState, ReactNode } from "react"
 
 type PizzaSizeType = {
   id: string
@@ -8,7 +8,16 @@ type PizzaSizeType = {
   text: string
 }
 
-type PizzaFlavourType = {
+type Pizza = {
+  size: {
+    id: string;
+    text: string;
+    slices: number
+  };
+  flavours: PizzaFlavourType[];
+}
+
+export type PizzaFlavourType = {
   id: string
   image: string
   name: string
@@ -27,25 +36,37 @@ type PizzaOrderType = {
     size: string
     slices: number
     value: number
-  }
+  }[]
   total: number
 }
 
 type OrderContextProps = {
-  pizzaSize: PizzaSizeType
-  setPizzaSize: React.Dispatch<React.SetStateAction<PizzaSizeType>>
-  pizzaFlavour: PizzaFlavourType
-  setPizzaFlavour: React.Dispatch<React.SetStateAction<PizzaFlavourType>>
+  pizzaSize: PizzaSizeType[]
+  setPizzaSize: React.Dispatch<React.SetStateAction<PizzaSizeType[]>>
+  pizzaFlavour: PizzaFlavourType[]
+  chosenPizzas: Pizza[]
+  setPizzaFlavour: (data: PizzaFlavourType[]) => void
+  choosePizza: (data: Pizza) => void
   pizzaOrder: PizzaOrderType
   setPizzaOrder: React.Dispatch<React.SetStateAction<PizzaOrderType>>
+}
+
+type OrderContextProviderProps = {
+  children: ReactNode
 }
 
 const OrderContext = createContext<OrderContextProps>({})
 
 const OrderContextProvider = ({ children }) => {
-  const [pizzaSize, setPizzaSize] = useState()
-  const [pizzaFlavour, setPizzaFlavour] = useState()
-  const [pizzaOrder, setPizzaOrder] = useState()
+  const [pizzaSize, setPizzaSize] = useState<PizzaSizeType[]>([])
+  const [pizzaFlavour, setPizzaFlavour] = useState<PizzaFlavourType[]>([])
+  const [chosenPizzas, setChosenPizzas] = useState<Pizza[]>([])
+
+  const [pizzaOrder, setPizzaOrder] = useState({})
+
+  function choosePizza(data: Pizza) {
+    setChosenPizzas((prevState) => [...prevState, data]);
+  }
 
   return (
     <OrderContext.Provider
@@ -54,6 +75,8 @@ const OrderContextProvider = ({ children }) => {
         setPizzaSize,
         pizzaFlavour,
         setPizzaFlavour,
+        chosenPizzas,
+        choosePizza,
         pizzaOrder,
         setPizzaOrder,
       }}

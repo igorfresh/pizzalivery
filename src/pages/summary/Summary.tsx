@@ -1,10 +1,18 @@
-import { useContext, useEffect, useState } from "react"
+import { useContext, useEffect } from "react"
+
 import { useNavigate } from "react-router-dom"
+
 import { Layout } from "../../components/layout/Layout"
+
 import { routes } from "../../routes"
+
 import OrderContext from "../../contexts/OrderContext"
+
 import { Title } from "../../components/title/Title"
+import { Button } from "../../components/button/Button"
+
 import { convertToCurrency } from "../../helpers/convertToCurrency"
+
 import {
   SummaryActionWrapper,
   SummaryAmount,
@@ -15,28 +23,39 @@ import {
   SummaryPrice,
   SummaryTitle,
 } from "./Summary.style"
-import { Button } from "../../components/button/Button"
 
 export default function Summary() {
   const navigate = useNavigate()
 
-  const { pizzaSize, pizzaFlavour, setPizzaOrder } = useContext(OrderContext)
-  const [summaryData, setSummaryData] = useState({})
-  const [summaryAmount, setSummaryAmount] = useState(0)
+  const { setPizzaOrder, chosenPizzas, setPizzaSize, setPizzaFlavour } = useContext(OrderContext)
+
+  const totalAmount = chosenPizzas.reduce((acc, pizza) => {
+    return acc + pizza.flavours[0].price[pizza.size.slices]
+  }, 0)
+
+  const handleChooseMorePizzas = () => {
+    setPizzaFlavour([])
+    setPizzaSize([])
+
+    navigate(routes.pizzaSize)
+  };
 
   const handleBack = () => {
     navigate(routes.pizzaFlavour)
   }
+
   const handleNext = () => {
     const payload = {
-      item: {
-        name: summaryData.name,
-        image: summaryData.image,
-        size: summaryData.text,
-        slices: summaryData.slices,
-        value: summaryData.price,
-      },
-      total: summaryAmount,
+      item: chosenPizzas.map((pizza) => {
+        return {
+          name: pizza.flavours.map(item => item.name).join(pizza.flavours.length > 1 ? ' | ' : ''),
+          image: pizza.flavours[0].image,
+          size: pizza.size.text,
+          slices: pizza.size.slices,
+          value: pizza.flavours[0].price[pizza.size.slices]
+        }
+      }),
+      total: totalAmount,
     }
 
     setPizzaOrder(payload)
@@ -44,48 +63,44 @@ export default function Summary() {
   }
 
   useEffect(() => {
-    if (!pizzaFlavour) {
-      return navigate(routes.pizzaSize)
-    }
-
-    if (!pizzaSize) {
+    if (chosenPizzas.length < 1) {
       return navigate(routes.home)
     }
-
-    setSummaryData({
-      text: pizzaSize[0].text,
-      slices: pizzaSize[0].slices,
-      name: pizzaFlavour[0].name,
-      price: pizzaFlavour[0].price[pizzaSize[0].slices],
-      image: pizzaFlavour[0].image,
-    })
   }, [])
-
-  useEffect(() => {
-    setSummaryAmount(summaryData.price)
-  }, [summaryAmount])
 
   return (
     <Layout>
       <Title tabIndex={0}>Resumo do pedido</Title>
       <SummaryContentWrapper>
-        <SummaryDetails>
-          <SummaryImage src={summaryData.image} alt="" />
-          <SummaryTitle>{summaryData.name}</SummaryTitle>
-          <SummaryDescription>
-            {summaryData.text} {`(${summaryData.slices}) pedaços`}
-          </SummaryDescription>
-          <SummaryPrice>{convertToCurrency(summaryData.price)}</SummaryPrice>
-        </SummaryDetails>
+        {chosenPizzas.map((pizza, index) => {
+          return (
+            <SummaryDetails key={index}>
+              <SummaryImage src={pizza.flavours[0].image} alt="" />
+              <SummaryTitle>
+                {pizza.flavours.map(item => item.name).join(pizza.flavours.length > 1 ? ' | ' : '')}
+              </SummaryTitle>
+              <SummaryDescription>
+                {pizza.size.text} {`(${pizza.size.slices}) pedaços`}
+              </SummaryDescription>
+              <SummaryPrice>{convertToCurrency(pizza.flavours[0].price[pizza.size.slices])}</SummaryPrice>
+            </SummaryDetails>
+          )
+        })}
+
         <SummaryAmount>
-          <SummaryPrice>{convertToCurrency(summaryAmount)}</SummaryPrice>
+          <SummaryPrice>{convertToCurrency(totalAmount)}</SummaryPrice>
         </SummaryAmount>
       </SummaryContentWrapper>
+
       <SummaryActionWrapper>
         <Button inverse="inverse" onClick={handleBack}>
           Voltar
         </Button>
-        <Button onClick={handleNext}>Ir para o pagamento</Button>
+
+        <div>
+          <Button onClick={handleChooseMorePizzas}>Escolher mais pizzas</Button>
+          <Button onClick={handleNext}>Ir para o pagamento</Button>
+        </div>
       </SummaryActionWrapper>
     </Layout>
   )

@@ -43,4 +43,9 @@ export const SummaryActionWrapper = styled.div`
   display: flex;
   justify-content: space-between;
   padding: ${sizes.large} 0;
+
+  div {
+    display: flex;
+    gap: 16px;
+  }
 `
